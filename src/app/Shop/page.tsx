@@ -7,9 +7,48 @@ import Image from 'next/image';
 import { FaAngleRight } from "react-icons/fa6";
 import Header from '@/components/Header';
 import Link from 'next/link';
-import { products } from '@/Products';
+import { client } from '@/sanity/lib/client';
+import { urlFor } from '@/sanity/lib/image';
+// import { products } from '@/Products';
 
-const ShopPage = () => {
+
+
+//define the product type
+interface product {
+  category: string;
+  id: string;
+  price: number;
+  description: string;
+  stockLevel: number;
+  imagePath: string;
+  discountPercentage: number;
+  isFeaturedProduct: number;
+  name: string;
+  image: string
+}
+
+//fectch products from sanity
+
+async function fetchProducts(): Promise<Product[]> {
+const query = `*[_type == "product"]{
+  category,
+  _id,
+  price,
+  description,
+  stockLevel,
+  discountPercentage,
+  isFeaturedProduct,
+  name,
+  image,
+  "image": image.asset._ref
+}`;
+const products = await client.fetch(query);
+return products;
+}
+
+const ShopPage = async () => {
+  const products = await fetchProducts();
+
   return (
     <div>
       {/*Section ! */}
@@ -48,16 +87,17 @@ const ShopPage = () => {
       <main className="pl-14 py-6">
         <div className="grid place-items-center grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
           {products.map((product, index:number) => (
-            <Link href={`/Shop/${index + 1}`} key={product.id}>
+             <Link href={`/Shop/${index + 1}`} key={product._id}>
               <Image
-                src={product.image}
+                src={urlFor(product.image).url()}
                 alt={product.name}
                 width={240}
                 height={240}
-                className="rounded-lg" />
+                className="rounded-lg h-[240]px w-[240px] object-cover" />
+
               <h4 className="text-2xl font-semibold mt-4">{product.name}</h4>
               <p className="text-2xl font-bold text-black pt-2">{product.price}</p>
-            </Link>
+             </Link>
           ))}
         </div>
 
